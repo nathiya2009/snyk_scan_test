@@ -10,30 +10,20 @@ permissions:
   contents: read
 
 jobs:
-  # Build and Package HealthPoint application
-  scan:
+  security:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Git Checkout
-      uses: actions/checkout@v2
-
-    - name: Install Mono
-      run: |
-        sudo apt update
-        sudo apt install -y mono-complete
-
-    - name: Install .NET Framework Developer Pack
-      run: |
-        sudo apt install -y referenceassemblies-pcl
-        
-    - name: Download NuGet CLI
-      run: |
-        sudo apt install -y wget
-        wget https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -O nuget.exe
-    
-    - name: Restore Nuget Packages
-      run: mono nuget.exe restore snyk_scan_test.sln
-
-    - name: Build
-      run: msbuild snyk_scan_test.sln /p:Configuration=Release
+      - uses: actions/checkout@master
+      
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/dotnet@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif
+          
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
