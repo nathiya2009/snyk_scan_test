@@ -21,7 +21,8 @@ jobs:
     - name: Install Mono
       run: |
         sudo apt update
-        sudo apt install -y mono-complete
+        sudo apt install -y wget
+        wget https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -O nuget.exe
     
     - name: Restore Nuget Packages
       run: mono nuget.exe restore snyk_scan_test.sln
