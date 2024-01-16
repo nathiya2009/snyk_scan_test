@@ -12,55 +12,19 @@ permissions:
 jobs:
   # Build and Package HealthPoint application
   scan:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
     - name: Git Checkout
       uses: actions/checkout@v2
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
-      with:
-        msbuild-architecture: x64
-             
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.5
-
-    - name: Navigate to Workspace
-      run: cd $GITHUB_WORKSPACE
-      
+    - name: Install Mono
+      run: |
+        sudo apt update
+        sudo apt install -y mono-complete
+    
     - name: Restore Nuget Packages
-      run: nuget restore snyk_scan_test.sln
+      run: mono nuget.exe restore snyk_scan_test.sln
 
     - name: Build
       run: msbuild snyk_scan_test.sln /p:Configuration=Release
-
-    - name: Install Snyk
-      run: |
-        npm install -g snyk
-
-    - name: Authenticate with Snyk
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-    - name: Snyk Open Source Scanning
-      run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --sarif-file-output=snyk-oss.sarif
-      continue-on-error: true
-        
-    - name: Snyk Code Scanning
-      run: snyk code test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-code.sarif
-      continue-on-error: true
-
-    - name: File Directory
-      run: | 
-        cd $GITHUB_WORKSPACE
-        ls
-
-    - name: Upload results to GitHub Open Source Scanning
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: $GITHUB_WORKSPACE/snyk-oss.sarif
-        
-    - name: Upload results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: $GITHUB_WORKSPACE/snyk-code.sarif
