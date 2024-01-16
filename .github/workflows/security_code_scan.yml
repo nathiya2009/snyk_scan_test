@@ -21,6 +21,14 @@ jobs:
     - name: Install Mono
       run: |
         sudo apt update
+        sudo apt install -y mono-complete
+
+    - name: Install .NET Framework Developer Pack
+      run: |
+        sudo apt install -y referenceassemblies-pcl
+        
+    - name: Download NuGet CLI
+      run: |
         sudo apt install -y wget
         wget https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -O nuget.exe
     
