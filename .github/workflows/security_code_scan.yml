@@ -30,10 +30,10 @@ jobs:
       run: cd $GITHUB_WORKSPACE
       
     - name: Restore Nuget Packages
-      run: nuget restore HealthPoint.sln
+      run: nuget restore snyk_scan_test.sln
 
     - name: Build
-      run: msbuild HealthPoint.sln /p:Configuration=Release
+      run: msbuild snyk_scan_test.sln /p:Configuration=Release
 
     - name: Install Snyk
       run: |
