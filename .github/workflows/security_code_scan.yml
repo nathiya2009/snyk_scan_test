@@ -33,10 +33,7 @@ jobs:
     
     - name: Restore Nuget Packages
       run: mono nuget.exe restore snyk_scan_test.sln
-
-    - name: Build
-      run: msbuild snyk_scan_test.sln /p:Configuration=Release
-      
+    
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/dotnet@master
       continue-on-error: true # To make sure that SARIF upload gets called
