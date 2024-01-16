@@ -13,25 +13,49 @@ permissions:
 
 jobs:
   security:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@master
+    - name: Git Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+      with:
+        msbuild-architecture: x64
+             
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Navigate to Workspace
+      run: cd $GITHUB_WORKSPACE
       
-      - name: Setup .NET
-        uses: actions/setup-dotnet@3.0.3
+    - name: Restore Nuget Packages
+      run: nuget restore HealthPoint.sln
+
+    - name: Build
+      run: msbuild HealthPoint.sln /p:Configuration=Release
+
+    - name: Install Snyk
+      run: |
+        npm install -g snyk
+
+    - name: Authenticate with Snyk
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+    - name: Snyk Open Source Scanning
+      run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --sarif-file-output=snyk-oss.sarif
+      continue-on-error: true
+
+    - name: Upload results to GitHub Open Source Scanning
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: snyk-oss.sarif
         
-      - name: Restore dependencies
-        run: dotnet restore ./path/to/your.sln
+    - name: Snyk Code Scanning
+      run: snyk code test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-code.sarif
+      continue-on-error: true
         
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/dotnet@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif
-          
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: snyk.sarif
+    - name: Upload results to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: snyk-code.sarif
