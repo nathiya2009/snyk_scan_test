@@ -5,7 +5,7 @@
 # Email: nathiya.palaniyappan@expleogroup.com
 #####################################################################
 
-name: HealthPoint Build & Deploy
+name: Snyk Code Security Scan
 
 on: 
   workflow_dispatch:
